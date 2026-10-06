@@ -1,0 +1,1250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DomStudio</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#f4f3f0;
+  --surface:#ffffff;
+  --surface2:#f0eff0;
+  --border:#e2e0dc;
+  --border2:#d0cec8;
+  --accent:#7c3aed;
+  --accent-light:#ede9fe;
+  --accent-hover:#6d28d9;
+  --text:#1a1a1a;
+  --text2:#6b7280;
+  --text3:#9ca3af;
+  --red:#ef4444;
+  --radius:10px;
+  --shadow:0 1px 3px rgba(0,0,0,0.08),0 4px 16px rgba(0,0,0,0.06);
+  --shadow-lg:0 8px 32px rgba(0,0,0,0.12),0 2px 8px rgba(0,0,0,0.06);
+}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text);height:100vh;display:flex;flex-direction:column;overflow:hidden;font-size:13px;}
+
+/* ===== HEADER ===== */
+header{display:flex;align-items:center;justify-content:space-between;padding:0 20px;height:52px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;z-index:100;}
+.logo-area{display:flex;align-items:baseline;gap:10px;}
+.logo{font-size:17px;font-weight:800;letter-spacing:-0.5px;color:var(--text);}
+.logo em{font-style:normal;color:var(--accent);}
+.tagline{font-size:11px;color:var(--text3);font-weight:500;letter-spacing:0.1px;}
+.header-right{display:flex;align-items:center;gap:8px;}
+button{font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;font-size:12px;border:none;cursor:pointer;border-radius:8px;transition:all 0.15s;letter-spacing:0.1px;display:inline-flex;align-items:center;gap:5px;}
+.btn-outline{background:transparent;color:var(--text2);border:1px solid var(--border2);padding:7px 13px;}
+.btn-outline:hover{background:var(--surface2);color:var(--text);}
+.btn-primary{background:var(--accent);color:#fff;padding:8px 16px;}
+.btn-primary:hover{background:var(--accent-hover);}
+.btn-primary:disabled{background:#c4b5fd;cursor:not-allowed;transform:none;}
+.btn-sm{padding:5px 10px;font-size:11px;}
+
+/* ===== LAYOUT ===== */
+.app-body{display:flex;flex:1;overflow:hidden;}
+
+/* ===== SIDEBAR ===== */
+.sidebar{width:258px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden;}
+.sidebar-inner{flex:1;overflow-y:auto;overflow-x:hidden;}
+.sidebar-inner::-webkit-scrollbar{width:4px;}
+.sidebar-inner::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+
+.s-section{border-bottom:1px solid var(--border);}
+.s-header{display:flex;align-items:center;justify-content:space-between;padding:12px 14px 8px;cursor:pointer;user-select:none;}
+.s-header-title{font-size:10px;font-weight:700;letter-spacing:1.2px;color:var(--text2);text-transform:uppercase;}
+.s-header-arrow{font-size:10px;color:var(--text3);transition:transform 0.2s;}
+.s-section.collapsed .s-header-arrow{transform:rotate(-90deg);}
+.s-section.collapsed .s-body{display:none;}
+.s-body{padding:0 10px 12px;}
+
+/* uploaded thumbnails */
+.thumb-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.thumb-item{position:relative;border-radius:8px;overflow:hidden;aspect-ratio:1;background:var(--surface2);border:1px solid var(--border);cursor:pointer;}
+.thumb-item img{width:100%;height:100%;object-fit:cover;display:block;}
+.thumb-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.55);display:none;flex-direction:column;align-items:center;justify-content:center;gap:5px;}
+.thumb-item:hover .thumb-overlay{display:flex;}
+.thumb-action{font-size:10px;font-weight:700;color:#fff;background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.3);padding:4px 10px;border-radius:5px;cursor:pointer;letter-spacing:0.3px;font-family:'Plus Jakarta Sans',sans-serif;}
+.thumb-action:hover{background:rgba(255,255,255,0.3);}
+.thumb-action.danger{color:#fca5a5;border-color:rgba(252,165,165,0.4);}
+
+.upload-zone{border:1.5px dashed var(--border2);border-radius:8px;padding:16px;text-align:center;cursor:pointer;color:var(--text3);font-size:12px;line-height:1.6;transition:all 0.2s;margin-bottom:8px;}
+.upload-zone:hover,.upload-zone.dragover{border-color:var(--accent);color:var(--accent);background:var(--accent-light);}
+.upload-zone .uz-icon{font-size:20px;margin-bottom:4px;display:block;}
+#file-input{display:none;}
+
+/* sticker pack */
+.pack-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;}
+.pack-item{display:flex;align-items:center;justify-content:center;font-size:22px;width:100%;aspect-ratio:1;border-radius:6px;cursor:grab;transition:all 0.15s;border:1px solid transparent;user-select:none;}
+.pack-item:hover{background:var(--accent-light);border-color:#c4b5fd;transform:scale(1.1);}
+.pack-item:active{transform:scale(0.95);}
+
+/* cropped stickers */
+.cropped-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.cropped-item{position:relative;border-radius:8px;overflow:hidden;aspect-ratio:1;background:repeating-conic-gradient(#ccc 0% 25%,#fff 0% 50%) 0 0/14px 14px;border:1px solid var(--border);cursor:pointer;}
+.cropped-item img{width:100%;height:100%;object-fit:contain;display:block;}
+.cropped-item .thumb-overlay{background:rgba(0,0,0,0.5);}
+.cropped-item:hover .thumb-overlay{display:flex;}
+
+.empty-state{padding:16px;text-align:center;color:var(--text3);font-size:11px;line-height:1.6;}
+
+/* ===== MAIN AREA ===== */
+.main-area{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+
+/* toolbar */
+.toolbar{display:flex;align-items:center;padding:0 16px;height:48px;background:var(--surface);border-bottom:1px solid var(--border);gap:6px;flex-shrink:0;}
+.tool-btn{padding:6px 12px;border-radius:7px;font-size:12px;font-weight:600;color:var(--text2);background:transparent;border:1px solid transparent;}
+.tool-btn:hover{background:var(--surface2);color:var(--text);}
+.tool-btn.active{background:var(--accent-light);color:var(--accent);border-color:#c4b5fd;}
+.toolbar-sep{width:1px;height:22px;background:var(--border);margin:0 4px;}
+.toolbar-opts{display:flex;align-items:center;gap:6px;margin-left:4px;}
+.color-swatch{width:20px;height:20px;border-radius:50%;border:2px solid transparent;cursor:pointer;transition:all 0.15s;flex-shrink:0;}
+.color-swatch:hover{transform:scale(1.15);}
+.color-swatch.active{border-color:var(--text);box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--text);}
+.size-slider{width:80px;accent-color:var(--accent);cursor:pointer;}
+.size-label{font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;min-width:28px;}
+
+/* canvas status */
+.canvas-status{display:flex;align-items:center;justify-content:space-between;padding:0 16px;height:36px;background:var(--surface2);border-bottom:1px solid var(--border);flex-shrink:0;}
+.status-info{font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;}
+.zoom-row{display:flex;align-items:center;gap:8px;}
+.zoom-label{font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;}
+.zoom-slider{width:100px;accent-color:var(--accent);cursor:pointer;}
+
+/* workspace */
+.workspace{flex:1;overflow:auto;position:relative;background:var(--bg);}
+.workspace::-webkit-scrollbar{width:8px;height:8px;}
+.workspace::-webkit-scrollbar-track{background:var(--bg);}
+.workspace::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px;}
+.workspace-inner{display:inline-block;padding:40px;}
+.canvas-board{position:relative;background:#ffffff;box-shadow:var(--shadow-lg),0 0 0 1px rgba(0,0,0,0.06);}
+#draw-canvas{position:absolute;top:0;left:0;pointer-events:none;}
+.items-layer{position:absolute;top:0;left:0;width:100%;height:100%;}
+
+/* canvas items */
+.c-item{position:absolute;user-select:none;}
+.c-item.selected .sel-outline{display:block;}
+.sel-outline{display:none;position:absolute;inset:-3px;border:2px solid var(--accent);border-radius:4px;pointer-events:none;}
+.sel-outline.dashed{border-style:dashed;}
+.handle{position:absolute;width:14px;height:14px;border-radius:50%;background:var(--accent);border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,0.25);cursor:pointer;display:none;z-index:5;}
+.c-item.selected .handle{display:flex;align-items:center;justify-content:center;}
+.handle.del{top:-7px;left:-7px;background:var(--red);cursor:pointer;font-size:9px;color:#fff;font-weight:bold;}
+.handle.rotate{top:-22px;left:50%;transform:translateX(-50%);cursor:grab;font-size:9px;}
+.handle.resize{bottom:-7px;right:-7px;cursor:se-resize;border-radius:3px;}
+.handle.resize-free{bottom:-7px;right:-7px;cursor:se-resize;border-radius:3px;}
+
+/* sticky note */
+.sticky-note{border-radius:4px;padding:10px;min-width:120px;min-height:80px;box-shadow:0 2px 8px rgba(0,0,0,0.15);display:flex;align-items:stretch;}
+.sticky-text{background:transparent;border:none;outline:none;resize:none;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:500;color:rgba(0,0,0,0.75);width:100%;min-height:60px;line-height:1.5;cursor:default;}
+.c-item.selected .sticky-text{cursor:text;}
+
+/* text label */
+.text-label{background:transparent;border:none;outline:none;resize:none;font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;min-width:40px;min-height:24px;cursor:default;line-height:1.3;white-space:pre-wrap;}
+.c-item.selected .text-label{cursor:text;}
+
+/* sticker img */
+.sticker-img{display:block;width:100%;height:100%;object-fit:contain;pointer-events:none;}
+
+/* ===== CROP MODAL ===== */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:1000;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+.modal-overlay.hidden{display:none;}
+.crop-modal{background:var(--surface);border-radius:16px;display:flex;flex-direction:column;width:calc(100vw - 80px);height:calc(100vh - 80px);overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,0.3);}
+.crop-header{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--border);}
+.crop-header h3{font-size:15px;font-weight:700;}
+.crop-header-tools{display:flex;align-items:center;gap:8px;}
+.crop-body{flex:1;background:#1a1a2e;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;}
+.crop-canvas-wrap{position:relative;display:inline-block;}
+#crop-canvas{display:block;max-width:calc(100vw - 160px);max-height:calc(100vh - 220px);border-radius:4px;}
+#lasso-canvas{position:absolute;top:0;left:0;pointer-events:none;}
+.crop-footer{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-top:1px solid var(--border);gap:10px;}
+.crop-hint{font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;}
+
+/* ===== TOAST ===== */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--text);color:#fff;padding:9px 18px;border-radius:8px;font-size:12px;font-weight:600;opacity:0;transition:all 0.25s;z-index:9999;pointer-events:none;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo-area">
+    <div class="logo">Dom<em>Studio</em></div>
+    <div class="tagline">Crop freely. Compose freely. Export as wallpaper.</div>
+  </div>
+  <div class="header-right">
+    <button class="btn-outline" id="hdr-upload-btn">⬆ Upload Images</button>
+    <button class="btn-primary" id="download-btn" disabled>⬇ Download Wallpaper</button>
+    <input type="file" id="file-input" accept="image/*" multiple>
+  </div>
+</header>
+
+<div class="app-body">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-inner">
+
+      <!-- UPLOADED -->
+      <div class="s-section" id="sec-uploaded">
+        <div class="s-header" onclick="toggleSection('sec-uploaded')">
+          <span class="s-header-title">Uploaded</span>
+          <span class="s-header-arrow">▼</span>
+        </div>
+        <div class="s-body">
+          <div class="upload-zone" id="upload-zone">
+            <span class="uz-icon">🖼</span>
+            Click or drop images here
+          </div>
+          <div class="thumb-grid" id="uploaded-grid"></div>
+        </div>
+      </div>
+
+      <!-- STICKER PACK -->
+      <div class="s-section" id="sec-pack">
+        <div class="s-header" onclick="toggleSection('sec-pack')">
+          <span class="s-header-title">Sticker Pack</span>
+          <span class="s-header-arrow">▼</span>
+        </div>
+        <div class="s-body">
+          <div class="pack-grid" id="pack-grid"></div>
+        </div>
+      </div>
+
+      <!-- CROPPED STICKERS -->
+      <div class="s-section" id="sec-cropped">
+        <div class="s-header" onclick="toggleSection('sec-cropped')">
+          <span class="s-header-title">Cropped Stickers</span>
+          <span class="s-header-arrow">▼</span>
+        </div>
+        <div class="s-body">
+          <div id="cropped-empty" class="empty-state">No stickers yet.<br>Crop an image to create one.</div>
+          <div class="cropped-grid" id="cropped-grid"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MAIN AREA -->
+  <div class="main-area">
+
+    <!-- TOOLBAR -->
+    <div class="toolbar">
+      <button class="tool-btn active" id="tool-select" onclick="setTool('select')">↖ Select</button>
+      <button class="tool-btn" id="tool-pen" onclick="setTool('pen')">✏ Pen</button>
+      <button class="tool-btn" id="tool-hl" onclick="setTool('highlighter')">🖌 Highlight</button>
+      <button class="tool-btn" id="tool-sticky" onclick="setTool('sticky')">📌 Sticky</button>
+      <button class="tool-btn" id="tool-text" onclick="setTool('text')">T Text</button>
+      <div class="toolbar-sep"></div>
+      <div class="toolbar-opts" id="opts-pen" style="display:none;">
+        <span style="font-size:11px;color:var(--text3);">Color:</span>
+        <div id="pen-colors"></div>
+        <div class="toolbar-sep"></div>
+        <span class="size-label" id="pen-size-lbl">4</span>
+        <input type="range" class="size-slider" id="pen-size" min="1" max="40" value="4">
+      </div>
+      <div class="toolbar-opts" id="opts-hl" style="display:none;">
+        <span style="font-size:11px;color:var(--text3);">Color:</span>
+        <div id="hl-colors"></div>
+        <div class="toolbar-sep"></div>
+        <span class="size-label" id="hl-size-lbl">24</span>
+        <input type="range" class="size-slider" id="hl-size" min="8" max="80" value="24">
+      </div>
+      <div class="toolbar-opts" id="opts-sticky" style="display:none;">
+        <span style="font-size:11px;color:var(--text3);">Color:</span>
+        <div id="sticky-colors"></div>
+      </div>
+      <div class="toolbar-opts" id="opts-text" style="display:none;">
+        <span style="font-size:11px;color:var(--text3);">Color:</span>
+        <div id="text-colors"></div>
+        <div class="toolbar-sep"></div>
+        <span class="size-label" id="text-size-lbl">32</span>
+        <input type="range" class="size-slider" id="text-size" min="16" max="200" value="32">
+      </div>
+    </div>
+
+    <!-- STATUS BAR -->
+    <div class="canvas-status">
+      <div class="status-info">2880 × 1800 · MacBook Retina Wallpaper</div>
+      <div class="zoom-row">
+        <span class="zoom-label" id="zoom-label">40%</span>
+        <input type="range" class="zoom-slider" id="zoom-slider" min="15" max="100" value="40">
+      </div>
+    </div>
+
+    <!-- WORKSPACE -->
+    <div class="workspace" id="workspace">
+      <div class="workspace-inner" id="workspace-inner">
+        <div class="canvas-board" id="canvas-board">
+          <canvas id="draw-canvas"></canvas>
+          <div class="items-layer" id="items-layer"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- CROP MODAL -->
+<div class="modal-overlay hidden" id="crop-modal">
+  <div class="crop-modal">
+    <div class="crop-header">
+      <h3>Freeform Crop</h3>
+      <div class="crop-header-tools">
+        <button class="btn-outline btn-sm active" id="crop-tool-lasso" onclick="setCropTool('lasso')">🪢 Lasso</button>
+        <button class="btn-outline btn-sm" id="crop-tool-poly" onclick="setCropTool('polygon')">🔷 Polygon</button>
+        <div style="width:1px;height:20px;background:var(--border);margin:0 4px;"></div>
+        <button class="btn-outline btn-sm" id="crop-undo-btn" onclick="cropUndoPoint()">↩ Undo</button>
+        <button class="btn-outline btn-sm" id="crop-reset-btn" onclick="cropReset()">✕ Reset</button>
+      </div>
+    </div>
+    <div class="crop-body">
+      <div class="crop-canvas-wrap" id="crop-canvas-wrap">
+        <canvas id="crop-canvas"></canvas>
+        <canvas id="lasso-canvas"></canvas>
+      </div>
+    </div>
+    <div class="crop-footer">
+      <div class="crop-hint" id="crop-hint">Hold and drag to draw a freehand selection</div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn-outline" onclick="closeCropModal()">Cancel</button>
+        <button class="btn-outline btn-sm" id="crop-finish-btn" onclick="finishPolygon()" style="display:none;">Finish Shape</button>
+        <button class="btn-primary" id="save-sticker-btn" onclick="saveSticker()">Save Sticker</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+//  STATE
+// ============================================================
+const CANVAS_W = 2880, CANVAS_H = 1800;
+let zoom = 0.4;
+let currentTool = 'select';
+let uploadedImages = [];
+let croppedStickers = [];
+let canvasItems = []; // {id,type,x,y,w,h,rot,...}
+let selectedId = null;
+let drawingStroke = null;
+let isDrawing = false;
+let idSeq = 0;
+const nextId = () => ++idSeq;
+
+// tool colors
+const penColors   = ['#111111','#7c3aed','#ef4444','#f97316','#16a34a','#2563eb','#ec4899','#ffffff'];
+const hlColors    = ['#fef08a','#bbf7d0','#fecaca','#bfdbfe','#fbcfe8'];
+const stickyColors= ['#fef9c3','#fce7f3','#dbeafe','#dcfce7','#fed7aa','#ede9fe'];
+const textColors  = ['#111111','#7c3aed','#ef4444','#f97316','#16a34a','#2563eb','#ec4899','#ffffff'];
+let activePenColor = penColors[0];
+let activeHlColor  = hlColors[0];
+let activeStickyColor = stickyColors[0];
+let activeTextColor   = textColors[0];
+let penSize = 4, hlSize = 24, textSize = 32;
+
+// pack stickers
+const PACK = [
+  {emoji:'⭐',label:'Yellow star'},
+  {emoji:'🌸',label:'Pink star'},
+  {emoji:'✨',label:'Sparkle'},
+  {emoji:'🌙',label:'Crescent moon'},
+  {emoji:'☀️',label:'Sun'},
+  {emoji:'❤️',label:'Red heart'},
+  {emoji:'💗',label:'Pink heart'},
+  {emoji:'⚡',label:'Lightning bolt'},
+  {emoji:'☁️',label:'Cloud'},
+  {emoji:'🌈',label:'Rainbow'},
+  {emoji:'🌸',label:'Flower'},
+  {emoji:'😊',label:'Smiley face'},
+  {emoji:'✅',label:'Green checkmark'},
+  {emoji:'🔥',label:'Fire'},
+  {emoji:'💎',label:'Diamond'},
+  {emoji:'👑',label:'Crown'},
+  {emoji:'🎵',label:'Music note'},
+  {emoji:'🍃',label:'Leaf'},
+];
+
+// crop modal state
+let cropImgData = null;
+let cropTool = 'lasso';
+let cropPoints = [];
+let cropDrawing = false;
+let cropPolyClosed = false;
+let cropHasSel = false;
+let cropMouseCur = null;
+
+// ============================================================
+//  INIT
+// ============================================================
+const board = document.getElementById('canvas-board');
+const drawCanvas = document.getElementById('draw-canvas');
+const itemsLayer = document.getElementById('items-layer');
+const drawCtx = drawCanvas.getContext('2d');
+const workspaceInner = document.getElementById('workspace-inner');
+
+function applyZoom() {
+  const w = Math.round(CANVAS_W * zoom);
+  const h = Math.round(CANVAS_H * zoom);
+  board.style.width = w + 'px';
+  board.style.height = h + 'px';
+  drawCanvas.width = w;
+  drawCanvas.height = h;
+  drawCanvas.style.width = w + 'px';
+  drawCanvas.style.height = h + 'px';
+  redrawStrokes();
+  document.getElementById('zoom-label').textContent = Math.round(zoom * 100) + '%';
+}
+
+document.getElementById('zoom-slider').addEventListener('input', function() {
+  zoom = this.value / 100;
+  applyZoom();
+});
+
+function init() {
+  applyZoom();
+  buildPackGrid();
+  buildColorRows();
+  setupDrawing();
+  setupBoardClick();
+  setupUpload();
+  updateDownloadBtn();
+}
+
+// ============================================================
+//  SIDEBAR TOGGLE
+// ============================================================
+function toggleSection(id) {
+  document.getElementById(id).classList.toggle('collapsed');
+}
+
+// ============================================================
+//  UPLOAD
+// ============================================================
+function setupUpload() {
+  const uz = document.getElementById('upload-zone');
+  const fi = document.getElementById('file-input');
+  [uz, document.getElementById('hdr-upload-btn')].forEach(el => {
+    el.addEventListener('click', () => fi.click());
+  });
+  uz.addEventListener('dragover', e => { e.preventDefault(); uz.classList.add('dragover'); });
+  uz.addEventListener('dragleave', () => uz.classList.remove('dragover'));
+  uz.addEventListener('drop', e => { e.preventDefault(); uz.classList.remove('dragover'); handleFiles(e.dataTransfer.files); });
+  fi.addEventListener('change', () => { handleFiles(fi.files); fi.value=''; });
+}
+
+function handleFiles(files) {
+  Array.from(files).forEach(file => {
+    if (!file.type.startsWith('image/')) return;
+    const r = new FileReader();
+    r.onload = e => {
+      uploadedImages.push({ id: nextId(), name: file.name, src: e.target.result });
+      renderUploadedGrid();
+    };
+    r.readAsDataURL(file);
+  });
+}
+
+function renderUploadedGrid() {
+  const grid = document.getElementById('uploaded-grid');
+  grid.innerHTML = '';
+  uploadedImages.forEach(img => {
+    const item = document.createElement('div');
+    item.className = 'thumb-item';
+    item.innerHTML = `
+      <img src="${img.src}" alt="${img.name}">
+      <div class="thumb-overlay">
+        <button class="thumb-action" onclick="openCropModal(${img.id})">Crop</button>
+        <button class="thumb-action danger" onclick="removeUpload(${img.id})">Remove</button>
+      </div>`;
+    grid.appendChild(item);
+  });
+}
+
+function removeUpload(id) {
+  uploadedImages = uploadedImages.filter(i => i.id !== id);
+  renderUploadedGrid();
+}
+
+// ============================================================
+//  PACK GRID
+// ============================================================
+function buildPackGrid() {
+  const g = document.getElementById('pack-grid');
+  PACK.forEach(p => {
+    const el = document.createElement('div');
+    el.className = 'pack-item';
+    el.textContent = p.emoji;
+    el.title = p.label;
+    el.draggable = true;
+    el.addEventListener('click', () => dropPackSticker(p.emoji));
+    el.addEventListener('dragstart', e => {
+      e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'pack', emoji: p.emoji }));
+    });
+    g.appendChild(el);
+  });
+}
+
+function dropPackSticker(emoji) {
+  // Create emoji canvas
+  const sz = 120;
+  const c = document.createElement('canvas');
+  c.width = sz; c.height = sz;
+  const ctx = c.getContext('2d');
+  ctx.font = `${sz * 0.7}px serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(emoji, sz/2, sz/2);
+  const src = c.toDataURL('image/png');
+  addStickerItem(src, sz, sz);
+}
+
+// ============================================================
+//  CROPPED STICKERS PANEL
+// ============================================================
+function renderCroppedGrid() {
+  const grid = document.getElementById('cropped-grid');
+  const empty = document.getElementById('cropped-empty');
+  grid.innerHTML = '';
+  empty.style.display = croppedStickers.length ? 'none' : 'block';
+  croppedStickers.forEach(s => {
+    const item = document.createElement('div');
+    item.className = 'cropped-item';
+    item.innerHTML = `
+      <img src="${s.src}" alt="sticker">
+      <div class="thumb-overlay">
+        <button class="thumb-action" onclick="addCroppedToCanvas(${s.id})">Add</button>
+        <button class="thumb-action danger" onclick="removeCropped(${s.id})">Remove</button>
+      </div>`;
+    item.draggable = true;
+    item.addEventListener('dragstart', e => {
+      e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'cropped', id: s.id }));
+    });
+    item.addEventListener('dblclick', () => addCroppedToCanvas(s.id));
+    grid.appendChild(item);
+  });
+}
+
+function addCroppedToCanvas(id) {
+  const s = croppedStickers.find(x => x.id === id);
+  if (!s) return;
+  addStickerItem(s.src, s.w, s.h);
+}
+
+function removeCropped(id) {
+  croppedStickers = croppedStickers.filter(x => x.id !== id);
+  renderCroppedGrid();
+}
+
+// ============================================================
+//  BOARD DRAG-DROP FROM SIDEBAR
+// ============================================================
+board.addEventListener('dragover', e => e.preventDefault());
+board.addEventListener('drop', e => {
+  e.preventDefault();
+  const raw = e.dataTransfer.getData('text/plain');
+  if (!raw) return;
+  try {
+    const data = JSON.parse(raw);
+    const rect = board.getBoundingClientRect();
+    const cx = (e.clientX - rect.left) / zoom;
+    const cy = (e.clientY - rect.top) / zoom;
+    if (data.type === 'pack') {
+      const sz = 120;
+      const c = document.createElement('canvas');
+      c.width = sz; c.height = sz;
+      const ctx = c.getContext('2d');
+      ctx.font = `${sz * 0.7}px serif`;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(data.emoji, sz/2, sz/2);
+      addStickerItem(c.toDataURL('image/png'), sz, sz, cx - sz/2, cy - sz/2);
+    } else if (data.type === 'cropped') {
+      const s = croppedStickers.find(x => x.id === data.id);
+      if (s) addStickerItem(s.src, s.w, s.h, cx - s.w/2, cy - s.h/2);
+    }
+  } catch(e) {}
+});
+
+// ============================================================
+//  TOOL SETUP
+// ============================================================
+function setTool(t) {
+  currentTool = t;
+  ['select','pen','highlighter','sticky','text'].forEach(name => {
+    const btn = document.getElementById('tool-' + (name === 'highlighter' ? 'hl' : name === 'sticky' ? 'sticky' : name));
+    if (btn) btn.classList.toggle('active', name === t);
+  });
+  document.getElementById('tool-select').classList.toggle('active', t === 'select');
+  document.getElementById('tool-pen').classList.toggle('active', t === 'pen');
+  document.getElementById('tool-hl').classList.toggle('active', t === 'highlighter');
+  document.getElementById('tool-sticky').classList.toggle('active', t === 'sticky');
+  document.getElementById('tool-text').classList.toggle('active', t === 'text');
+  document.getElementById('opts-pen').style.display = t === 'pen' ? 'flex' : 'none';
+  document.getElementById('opts-hl').style.display  = t === 'highlighter' ? 'flex' : 'none';
+  document.getElementById('opts-sticky').style.display = t === 'sticky' ? 'flex' : 'none';
+  document.getElementById('opts-text').style.display = t === 'text' ? 'flex' : 'none';
+  board.style.cursor = (t === 'pen' || t === 'highlighter') ? 'crosshair' : (t === 'sticky' || t === 'text') ? 'copy' : 'default';
+}
+
+// ============================================================
+//  COLOR ROWS
+// ============================================================
+function buildColorRows() {
+  makeColorRow('pen-colors', penColors, () => activePenColor, v => activePenColor = v);
+  makeColorRow('hl-colors', hlColors, () => activeHlColor, v => activeHlColor = v);
+  makeColorRow('sticky-colors', stickyColors, () => activeStickyColor, v => activeStickyColor = v);
+  makeColorRow('text-colors', textColors, () => activeTextColor, v => activeTextColor = v);
+  const ps = document.getElementById('pen-size');
+  ps.addEventListener('input', () => { penSize = +ps.value; document.getElementById('pen-size-lbl').textContent = penSize; });
+  const hs = document.getElementById('hl-size');
+  hs.addEventListener('input', () => { hlSize = +hs.value; document.getElementById('hl-size-lbl').textContent = hlSize; });
+  const ts = document.getElementById('text-size');
+  ts.addEventListener('input', () => { textSize = +ts.value; document.getElementById('text-size-lbl').textContent = textSize; });
+}
+
+function makeColorRow(containerId, colors, getter, setter) {
+  const c = document.getElementById(containerId);
+  c.style.display = 'flex'; c.style.gap = '4px';
+  colors.forEach((col, i) => {
+    const sw = document.createElement('div');
+    sw.className = 'color-swatch' + (i === 0 ? ' active' : '');
+    sw.style.background = col;
+    if (col === '#ffffff') sw.style.border = '2px solid #ccc';
+    sw.addEventListener('click', () => {
+      c.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+      sw.classList.add('active');
+      setter(col);
+    });
+    c.appendChild(sw);
+  });
+}
+
+// ============================================================
+//  DRAWING (pen / highlighter)
+// ============================================================
+let strokes = []; // {points, color, width, opacity}
+let activeStroke = null;
+
+function setupDrawing() {
+  board.addEventListener('mousedown', onBoardMouseDown);
+  board.addEventListener('mousemove', onBoardMouseMove);
+  board.addEventListener('mouseup', onBoardMouseUp);
+  board.addEventListener('mouseleave', onBoardMouseUp);
+}
+
+function getCanvasPos(e) {
+  const rect = board.getBoundingClientRect();
+  return { x: (e.clientX - rect.left) / zoom, y: (e.clientY - rect.top) / zoom };
+}
+
+function onBoardMouseDown(e) {
+  if (e.target !== board && e.target !== drawCanvas) return;
+  if (currentTool === 'pen' || currentTool === 'highlighter') {
+    isDrawing = true;
+    const pos = getCanvasPos(e);
+    activeStroke = {
+      points: [pos],
+      color: currentTool === 'pen' ? activePenColor : activeHlColor,
+      width: currentTool === 'pen' ? penSize : hlSize,
+      opacity: currentTool === 'highlighter' ? 0.35 : 1,
+    };
+    e.preventDefault();
+  } else if (currentTool === 'sticky') {
+    const pos = getCanvasPos(e);
+    addStickyNote(pos.x, pos.y);
+    setTool('select');
+  } else if (currentTool === 'text') {
+    const pos = getCanvasPos(e);
+    addTextLabel(pos.x, pos.y);
+    setTool('select');
+  }
+}
+
+function onBoardMouseMove(e) {
+  if (!isDrawing || !activeStroke) return;
+  const pos = getCanvasPos(e);
+  activeStroke.points.push(pos);
+  redrawStrokes();
+  drawStroke(drawCtx, activeStroke, zoom);
+}
+
+function onBoardMouseUp(e) {
+  if (isDrawing && activeStroke && activeStroke.points.length > 1) {
+    strokes.push(activeStroke);
+    updateDownloadBtn();
+  }
+  isDrawing = false;
+  activeStroke = null;
+  redrawStrokes();
+}
+
+function redrawStrokes() {
+  drawCtx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
+  strokes.forEach(s => drawStroke(drawCtx, s, zoom));
+}
+
+function drawStroke(ctx, s, z) {
+  if (s.points.length < 2) return;
+  ctx.save();
+  ctx.globalAlpha = s.opacity;
+  ctx.strokeStyle = s.color;
+  ctx.lineWidth = s.width * z;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.beginPath();
+  ctx.moveTo(s.points[0].x * z, s.points[0].y * z);
+  for (let i = 1; i < s.points.length; i++) {
+    ctx.lineTo(s.points[i].x * z, s.points[i].y * z);
+  }
+  ctx.stroke();
+  ctx.restore();
+}
+
+// ============================================================
+//  BOARD CLICK (sticky / text handled in mousedown)
+// ============================================================
+function setupBoardClick() {
+  board.addEventListener('click', e => {
+    if (currentTool === 'select' && (e.target === board || e.target === drawCanvas)) {
+      deselectAll();
+    }
+  });
+}
+
+// ============================================================
+//  CANVAS ITEMS
+// ============================================================
+function addStickerItem(src, nw, nh, cx, cy) {
+  const maxDim = Math.min(CANVAS_W * 0.2, 400);
+  const ratio = Math.min(maxDim / nw, maxDim / nh, 1);
+  const w = Math.round(nw * ratio), h = Math.round(nh * ratio);
+  const x = cx !== undefined ? cx : Math.round((CANVAS_W - w) / 2 + (Math.random()-0.5)*200);
+  const y = cy !== undefined ? cy : Math.round((CANVAS_H - h) / 2 + (Math.random()-0.5)*200);
+  const item = { id: nextId(), type: 'sticker', src, x, y, w, h, rot: 0 };
+  canvasItems.push(item);
+  renderItem(item);
+  selectItem(item.id);
+  updateDownloadBtn();
+}
+
+function addStickyNote(x, y) {
+  const item = { id: nextId(), type: 'sticky', x: x - 100, y: y - 60, w: 200, h: 120, rot: 0, color: activeStickyColor, text: '' };
+  canvasItems.push(item);
+  renderItem(item);
+  selectItem(item.id);
+  updateDownloadBtn();
+}
+
+function addTextLabel(x, y) {
+  const item = { id: nextId(), type: 'text', x: x - 40, y: y - textSize/2, w: 200, h: textSize + 10, rot: 0, color: activeTextColor, size: textSize, text: 'Text' };
+  canvasItems.push(item);
+  renderItem(item);
+  selectItem(item.id);
+  updateDownloadBtn();
+}
+
+function renderItem(item) {
+  const el = document.createElement('div');
+  el.className = 'c-item';
+  el.id = 'item-' + item.id;
+  el.style.cssText = `left:${item.x * zoom}px;top:${item.y * zoom}px;width:${item.w * zoom}px;height:${item.h * zoom}px;transform:rotate(${item.rot}deg);`;
+
+  if (item.type === 'sticker') {
+    el.innerHTML = `<img class="sticker-img" src="${item.src}" draggable="false">`;
+  } else if (item.type === 'sticky') {
+    el.style.width = item.w * zoom + 'px';
+    el.style.height = item.h * zoom + 'px';
+    el.innerHTML = `<div class="sticky-note" style="background:${item.color};width:100%;height:100%;"><textarea class="sticky-text" placeholder="Type here…" spellcheck="false">${item.text}</textarea></div>`;
+    const ta = el.querySelector('textarea');
+    ta.addEventListener('input', () => { item.text = ta.value; });
+    ta.addEventListener('mousedown', e => e.stopPropagation());
+  } else if (item.type === 'text') {
+    el.innerHTML = `<textarea class="text-label" spellcheck="false" style="color:${item.color};font-size:${item.size * zoom}px;width:100%;height:100%;">${item.text}</textarea>`;
+    const ta = el.querySelector('textarea');
+    ta.addEventListener('input', () => { item.text = ta.value; autoResizeText(el, item, ta); });
+    ta.addEventListener('mousedown', e => e.stopPropagation());
+  }
+
+  // handles
+  const selOutline = document.createElement('div');
+  selOutline.className = 'sel-outline' + (item.type === 'text' ? ' dashed' : '');
+  el.appendChild(selOutline);
+
+  const delH = document.createElement('div');
+  delH.className = 'handle del';
+  delH.textContent = '×';
+  delH.title = 'Delete';
+  delH.addEventListener('mousedown', e => { e.stopPropagation(); removeItem(item.id); });
+  el.appendChild(delH);
+
+  const rotH = document.createElement('div');
+  rotH.className = 'handle rotate';
+  rotH.textContent = '↻';
+  rotH.title = 'Rotate';
+  rotH.addEventListener('mousedown', e => { e.stopPropagation(); startRotate(e, item); });
+  el.appendChild(rotH);
+
+  const resH = document.createElement('div');
+  resH.className = 'handle ' + (item.type === 'sticky' ? 'resize-free' : 'resize');
+  resH.addEventListener('mousedown', e => { e.stopPropagation(); startResize(e, item); });
+  el.appendChild(resH);
+
+  el.addEventListener('mousedown', e => {
+    if (e.target === delH || e.target === rotH || e.target === resH) return;
+    if (e.target.tagName === 'TEXTAREA') { selectItem(item.id); return; }
+    if (currentTool !== 'select') return;
+    e.preventDefault();
+    selectItem(item.id);
+    startDrag(e, item);
+  });
+
+  itemsLayer.appendChild(el);
+}
+
+function autoResizeText(el, item, ta) {
+  ta.style.height = 'auto';
+  const newH = Math.max(ta.scrollHeight, item.size * zoom + 10);
+  ta.style.height = newH + 'px';
+  el.style.height = newH + 'px';
+  item.h = Math.round(newH / zoom);
+}
+
+function getItemEl(id) { return document.getElementById('item-' + id); }
+
+function syncItemEl(item) {
+  const el = getItemEl(item.id);
+  if (!el) return;
+  el.style.left = item.x * zoom + 'px';
+  el.style.top = item.y * zoom + 'px';
+  el.style.width = item.w * zoom + 'px';
+  el.style.height = item.h * zoom + 'px';
+  el.style.transform = `rotate(${item.rot}deg)`;
+  if (item.type === 'text') {
+    const ta = el.querySelector('textarea');
+    if (ta) ta.style.fontSize = item.size * zoom + 'px';
+  }
+}
+
+function selectItem(id) {
+  deselectAll();
+  selectedId = id;
+  const el = getItemEl(id);
+  if (el) {
+    el.classList.add('selected');
+    // bring to front in DOM
+    itemsLayer.appendChild(el);
+  }
+}
+
+function deselectAll() {
+  selectedId = null;
+  document.querySelectorAll('.c-item.selected').forEach(el => el.classList.remove('selected'));
+}
+
+function removeItem(id) {
+  canvasItems = canvasItems.filter(i => i.id !== id);
+  const el = getItemEl(id);
+  if (el) el.remove();
+  if (selectedId === id) selectedId = null;
+  updateDownloadBtn();
+}
+
+// ============================================================
+//  DRAG
+// ============================================================
+function startDrag(e, item) {
+  const startX = e.clientX / zoom - item.x;
+  const startY = e.clientY / zoom - item.y;
+  const el = getItemEl(item.id);
+  el.style.cursor = 'grabbing';
+  function onMove(e) {
+    item.x = e.clientX / zoom - startX;
+    item.y = e.clientY / zoom - startY;
+    el.style.left = item.x * zoom + 'px';
+    el.style.top = item.y * zoom + 'px';
+  }
+  function onUp() {
+    el.style.cursor = '';
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onUp);
+  }
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup', onUp);
+}
+
+// ============================================================
+//  RESIZE
+// ============================================================
+function startResize(e, item) {
+  e.preventDefault();
+  const startX = e.clientX, startY = e.clientY;
+  const startW = item.w, startH = item.h;
+  const locked = item.type === 'sticker';
+  const aspect = startW / startH;
+  function onMove(e) {
+    const dx = (e.clientX - startX) / zoom;
+    const dy = (e.clientY - startY) / zoom;
+    if (locked) {
+      const newW = Math.max(30, startW + dx);
+      item.w = Math.round(newW);
+      item.h = Math.round(newW / aspect);
+    } else {
+      item.w = Math.max(60, Math.round(startW + dx));
+      item.h = Math.max(40, Math.round(startH + dy));
+    }
+    syncItemEl(item);
+  }
+  function onUp() {
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onUp);
+  }
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup', onUp);
+}
+
+// ============================================================
+//  ROTATE
+// ============================================================
+function startRotate(e, item) {
+  e.preventDefault();
+  const el = getItemEl(item.id);
+  const rect = el.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+  function onMove(e) {
+    const angle = Math.atan2(e.clientY - cy, e.clientX - cx) * 180 / Math.PI + 90;
+    item.rot = Math.round(angle);
+    el.style.transform = `rotate(${item.rot}deg)`;
+  }
+  function onUp() {
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onUp);
+  }
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup', onUp);
+}
+
+// ============================================================
+//  KEYBOARD
+// ============================================================
+document.addEventListener('keydown', e => {
+  if (e.key === 'Delete' || e.key === 'Backspace') {
+    // Guard: don't delete while typing
+    const tag = document.activeElement?.tagName;
+    if (tag === 'TEXTAREA' || tag === 'INPUT') return;
+    if (selectedId) removeItem(selectedId);
+  }
+});
+
+// ============================================================
+//  DOWNLOAD BUTTON STATE
+// ============================================================
+function updateDownloadBtn() {
+  const hasItems = canvasItems.length > 0 || strokes.length > 0;
+  document.getElementById('download-btn').disabled = !hasItems;
+}
+
+// ============================================================
+//  CROP MODAL
+// ============================================================
+const cropModal = document.getElementById('crop-modal');
+const cropCanvas = document.getElementById('crop-canvas');
+const lassoCanvas = document.getElementById('lasso-canvas');
+const cropCtx = cropCanvas.getContext('2d');
+const lassoCtx = lassoCanvas.getContext('2d');
+
+function openCropModal(imgId) {
+  const img = uploadedImages.find(i => i.id === imgId);
+  if (!img) return;
+  cropImgData = img;
+  cropReset();
+  cropModal.classList.remove('hidden');
+
+  const image = new Image();
+  image.onload = () => {
+    const maxW = window.innerWidth - 160;
+    const maxH = window.innerHeight - 220;
+    const r = Math.min(maxW / image.naturalWidth, maxH / image.naturalHeight, 1);
+    const w = Math.round(image.naturalWidth * r);
+    const h = Math.round(image.naturalHeight * r);
+    cropCanvas.width = w; cropCanvas.height = h;
+    cropCanvas.style.width = w + 'px'; cropCanvas.style.height = h + 'px';
+    lassoCanvas.width = w; lassoCanvas.height = h;
+    lassoCanvas.style.width = w + 'px'; lassoCanvas.style.height = h + 'px';
+    cropCtx.drawImage(image, 0, 0, w, h);
+    cropImgData._img = image;
+    cropImgData._scale = r;
+  };
+  image.src = img.src;
+}
+
+function closeCropModal() {
+  cropModal.classList.add('hidden');
+  cropImgData = null;
+  cropReset();
+}
+
+function setCropTool(t) {
+  cropTool = t;
+  document.getElementById('crop-tool-lasso').classList.toggle('active', t === 'lasso');
+  document.getElementById('crop-tool-poly').classList.toggle('active', t === 'polygon');
+  document.getElementById('crop-finish-btn').style.display = t === 'polygon' ? 'inline-flex' : 'none';
+  const hints = { lasso: 'Hold and drag to draw a freehand selection', polygon: 'Click to add points · double-click or Finish to close' };
+  document.getElementById('crop-hint').textContent = hints[t];
+  cropReset();
+}
+
+function cropReset() {
+  cropPoints = [];
+  cropDrawing = false;
+  cropPolyClosed = false;
+  cropHasSel = false;
+  cropMouseCur = null;
+  lassoCtx.clearRect(0, 0, lassoCanvas.width, lassoCanvas.height);
+}
+
+function cropUndoPoint() {
+  if (cropTool === 'polygon' && cropPoints.length > 0) {
+    cropPoints.pop();
+    cropPolyClosed = false;
+    cropHasSel = false;
+    drawCropOverlay();
+  }
+}
+
+function finishPolygon() {
+  if (cropPoints.length > 2) { cropPolyClosed = true; cropHasSel = true; drawCropOverlay(); }
+}
+
+function getCropPos(e) {
+  const rect = cropCanvas.getBoundingClientRect();
+  return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+}
+
+lassoCanvas.addEventListener('mousedown', e => {
+  const pos = getCropPos(e);
+  if (cropTool === 'lasso') { cropDrawing = true; cropPoints = [pos]; cropHasSel = false; }
+  else {
+    if (cropPoints.length > 2) {
+      const d = Math.hypot(pos.x - cropPoints[0].x, pos.y - cropPoints[0].y);
+      if (d < 14) { finishPolygon(); return; }
+    }
+    cropPoints.push(pos);
+    drawCropOverlay();
+  }
+});
+
+lassoCanvas.addEventListener('mousemove', e => {
+  const pos = getCropPos(e);
+  cropMouseCur = pos;
+  if (cropTool === 'lasso' && cropDrawing) { cropPoints.push(pos); drawCropOverlay(); }
+  else if (cropTool === 'polygon' && !cropPolyClosed) drawCropOverlay(pos);
+});
+
+lassoCanvas.addEventListener('mouseup', e => {
+  if (cropTool === 'lasso' && cropDrawing) {
+    cropDrawing = false;
+    if (cropPoints.length > 5) { cropHasSel = true; drawCropOverlay(); }
+  }
+});
+
+lassoCanvas.addEventListener('dblclick', e => {
+  if (cropTool === 'polygon' && cropPoints.length > 2) finishPolygon();
+});
+
+function drawCropOverlay(cur) {
+  lassoCtx.clearRect(0, 0, lassoCanvas.width, lassoCanvas.height);
+  if (cropPoints.length < 1) return;
+  lassoCtx.save();
+  lassoCtx.strokeStyle = '#7c3aed';
+  lassoCtx.lineWidth = 2;
+  lassoCtx.shadowColor = '#7c3aed';
+  lassoCtx.shadowBlur = 6;
+  lassoCtx.beginPath();
+  lassoCtx.moveTo(cropPoints[0].x, cropPoints[0].y);
+  cropPoints.forEach(p => lassoCtx.lineTo(p.x, p.y));
+  const closed = cropHasSel || cropPolyClosed;
+  if (cur && !closed) lassoCtx.lineTo(cur.x, cur.y);
+  if (closed) lassoCtx.closePath();
+  lassoCtx.setLineDash(closed ? [] : [5, 3]);
+  lassoCtx.stroke();
+  if (closed) { lassoCtx.fillStyle = 'rgba(124,58,237,0.15)'; lassoCtx.fill(); }
+  // poly points
+  if (cropTool === 'polygon') {
+    cropPoints.forEach((p, i) => {
+      lassoCtx.beginPath();
+      lassoCtx.arc(p.x, p.y, i === 0 ? 6 : 4, 0, Math.PI * 2);
+      lassoCtx.fillStyle = i === 0 ? '#7c3aed' : '#fff';
+      lassoCtx.fill();
+      lassoCtx.strokeStyle = '#7c3aed';
+      lassoCtx.lineWidth = 1.5;
+      lassoCtx.setLineDash([]);
+      lassoCtx.stroke();
+    });
+  }
+  lassoCtx.restore();
+}
+
+function saveSticker() {
+  if (!cropHasSel && !cropPolyClosed) { showToast('Draw a selection first'); return; }
+  if (cropPoints.length < 3) { showToast('Selection too small'); return; }
+
+  const tmp = document.createElement('canvas');
+  tmp.width = cropCanvas.width; tmp.height = cropCanvas.height;
+  const tCtx = tmp.getContext('2d');
+  tCtx.save();
+  tCtx.beginPath();
+  tCtx.moveTo(cropPoints[0].x, cropPoints[0].y);
+  cropPoints.forEach(p => tCtx.lineTo(p.x, p.y));
+  tCtx.closePath();
+  tCtx.clip();
+  tCtx.drawImage(cropCanvas, 0, 0);
+  tCtx.restore();
+
+  const xs = cropPoints.map(p => p.x), ys = cropPoints.map(p => p.y);
+  const minX = Math.floor(Math.min(...xs)), minY = Math.floor(Math.min(...ys));
+  const maxX = Math.ceil(Math.max(...xs)), maxY = Math.ceil(Math.max(...ys));
+  const bw = maxX - minX, bh = maxY - minY;
+  if (bw < 5 || bh < 5) { showToast('Selection too small'); return; }
+
+  const out = document.createElement('canvas');
+  out.width = bw; out.height = bh;
+  out.getContext('2d').drawImage(tmp, minX, minY, bw, bh, 0, 0, bw, bh);
+
+  // scale back to original pixels
+  const sc = cropImgData._scale || 1;
+  const realW = Math.round(bw / sc), realH = Math.round(bh / sc);
+
+  croppedStickers.push({ id: nextId(), src: out.toDataURL('image/png'), w: realW, h: realH });
+  renderCroppedGrid();
+  closeCropModal();
+  showToast('Sticker saved to Cropped Stickers!');
+}
+
+// ============================================================
+//  DOWNLOAD
+// ============================================================
+document.getElementById('download-btn').addEventListener('click', downloadWallpaper);
+
+function downloadWallpaper() {
+  const exp = document.createElement('canvas');
+  exp.width = CANVAS_W; exp.height = CANVAS_H;
+  const ctx = exp.getContext('2d');
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+
+  // Draw strokes at full res
+  strokes.forEach(s => {
+    if (s.points.length < 2) return;
+    ctx.save();
+    ctx.globalAlpha = s.opacity;
+    ctx.strokeStyle = s.color;
+    ctx.lineWidth = s.width;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.beginPath();
+    ctx.moveTo(s.points[0].x, s.points[0].y);
+    s.points.forEach(p => ctx.lineTo(p.x, p.y));
+    ctx.stroke();
+    ctx.restore();
+  });
+
+  // Build z-ordered list from DOM order
+  const orderedIds = Array.from(itemsLayer.children).map(el => parseInt(el.id.replace('item-','')));
+  const orderedItems = orderedIds.map(id => canvasItems.find(i => i.id === id)).filter(Boolean);
+
+  const loads = orderedItems.map(item => new Promise(resolve => {
+    if (item.type === 'sticker') {
+      const img = new Image();
+      img.onload = () => {
+        ctx.save();
+        const cx = (item.x + item.w / 2), cy = (item.y + item.h / 2);
+        ctx.translate(cx, cy);
+        ctx.rotate(item.rot * Math.PI / 180);
+        ctx.drawImage(img, -item.w / 2, -item.h / 2, item.w, item.h);
+        ctx.restore();
+        resolve();
+      };
+      img.src = item.src;
+    } else if (item.type === 'sticky') {
+      ctx.save();
+      const cx = item.x + item.w / 2, cy = item.y + item.h / 2;
+      ctx.translate(cx, cy);
+      ctx.rotate(item.rot * Math.PI / 180);
+      // shadow
+      ctx.shadowColor = 'rgba(0,0,0,0.18)';
+      ctx.shadowBlur = 16;
+      ctx.shadowOffsetY = 4;
+      ctx.fillStyle = item.color;
+      ctx.beginPath();
+      ctx.roundRect(-item.w/2, -item.h/2, item.w, item.h, 6);
+      ctx.fill();
+      ctx.shadowColor = 'transparent';
+      // text
+      ctx.fillStyle = 'rgba(0,0,0,0.75)';
+      ctx.font = `500 ${26}px 'Plus Jakarta Sans', sans-serif`;
+      ctx.textBaseline = 'top';
+      wrapText(ctx, item.text || '', -item.w/2 + 14, -item.h/2 + 14, item.w - 28, 34);
+      ctx.restore();
+      resolve();
+    } else if (item.type === 'text') {
+      ctx.save();
+      const cx = item.x + item.w / 2, cy = item.y + item.h / 2;
+      ctx.translate(cx, cy);
+      ctx.rotate(item.rot * Math.PI / 180);
+      ctx.fillStyle = item.color;
+      ctx.font = `600 ${item.size}px 'Plus Jakarta Sans', sans-serif`;
+      ctx.textBaseline = 'top';
+      const lines = (item.text || '').split('\n');
+      lines.forEach((line, i) => ctx.fillText(line, -item.w/2, -item.h/2 + i * (item.size * 1.3)));
+      ctx.restore();
+      resolve();
+    } else resolve();
+  }));
+
+  Promise.all(loads).then(() => {
+    const link = document.createElement('a');
+    link.download = `domstudio-wallpaper-${Date.now()}.png`;
+    link.href = exp.toDataURL('image/png');
+    link.click();
+    showToast('Wallpaper downloaded!');
+  });
+}
+
+function wrapText(ctx, text, x, y, maxW, lineH) {
+  const words = text.split(' ');
+  let line = '';
+  let cy = y;
+  for (const word of words) {
+    const test = line + word + ' ';
+    if (ctx.measureText(test).width > maxW && line !== '') {
+      ctx.fillText(line, x, cy);
+      line = word + ' ';
+      cy += lineH;
+    } else line = test;
+  }
+  ctx.fillText(line, x, cy);
+}
+
+// ============================================================
+//  TOAST
+// ============================================================
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2400);
+}
+
+// ============================================================
+//  START
+// ============================================================
+init();
+</script>
+</body>
+</html>
