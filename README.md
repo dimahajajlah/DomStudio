@@ -1,4 +1,5 @@
 # DomStudio
+https://dimahajajlah.github.io/DomStudio/
 DomStudio — Full Project Description
 What it is
 DomStudio is a browser‑based collage and wallpaper studio. You upload your own photos, freeform‑crop them into stickers (no rectangle limits), arrange everything on a giant white canvas alongside drawings, sticky notes, text labels, and a built‑in decorative sticker pack, and then download the finished composition as a high‑resolution 2880 × 1800 PNG sized exactly for a MacBook Retina wallpaper. It's frontend‑only — nothing leaves your browser.
